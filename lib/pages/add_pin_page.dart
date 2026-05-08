@@ -44,7 +44,7 @@ class _AddPinPage extends State<AddPinPage> {
     setState(() => loading = true);
     try {
       final resp = await http.get(
-        Uri.parse("YOUR BACKEND SERVER IP/api/share/$pin"),
+        Uri.parse("https://taco-share-561562660997.australia-southeast1.run.app/api/share/$pin"),
       ).timeout(const Duration(seconds: 5));
 
       if (resp.statusCode != 200) {

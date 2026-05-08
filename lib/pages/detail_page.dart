@@ -181,7 +181,7 @@ class _DetailPage extends State<DetailPage> {
     };
 
     try {
-      final uri = Uri.parse("YOUR BACKEND SERVER IP/api/share");
+      final uri = Uri.parse("https://taco-share-561562660997.australia-southeast1.run.app/api/share");
 
       final response = await http
           .post(
