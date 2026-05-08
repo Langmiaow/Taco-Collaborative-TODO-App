@@ -164,12 +164,31 @@ class _TodoPage extends State<TodoPage> {
 
   List<int> _filteredIndex(List todos) {
     final result = <int>[];
+
     for (int i = 0; i < todos.length; i++) {
       final t = todos[i];
       if ((t is Map && t["isDone"] == true) == showDone) {
         result.add(i);
       }
     }
+
+    if (showDone) {
+      result.sort((a, b) {
+        final ta = todos[a];
+        final tb = todos[b];
+
+        final doneAtA = ta is Map && ta["doneAt"] is int
+            ? ta["doneAt"] as int
+            : 0;
+
+        final doneAtB = tb is Map && tb["doneAt"] is int
+            ? tb["doneAt"] as int
+            : 0;
+
+        return doneAtB.compareTo(doneAtA);
+      });
+    }
+
     return result;
   }
 
@@ -475,6 +494,7 @@ class _TodoPage extends State<TodoPage> {
                       }
 
                       return ReorderableListView.builder(
+                        buildDefaultDragHandles: false,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         itemCount: filteredIndex.length,
                         proxyDecorator: (child, index, animation) {
@@ -486,7 +506,7 @@ class _TodoPage extends State<TodoPage> {
                           );
                         },
                         onReorder: (oldPos, newPos) async {
-                          if (!selectMode) return;
+                          if (!selectMode || showDone) return;
 
                           if (newPos > oldPos) newPos -= 1;
 
@@ -554,11 +574,11 @@ class _TodoPage extends State<TodoPage> {
 
                           return KeyedSubtree(
                             key: ObjectKey(t),
-                            child: selectMode
+                            child: selectMode && !showDone
                                 ? ReorderableDelayedDragStartListener(
-                                    index: i,
-                                    child: card,
-                                  )
+                              index: i,
+                              child: card,
+                            )
                                 : card,
                           );
                         },

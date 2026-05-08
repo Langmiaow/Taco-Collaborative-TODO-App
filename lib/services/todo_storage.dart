@@ -66,6 +66,13 @@ class TodoStorage {
 
     final Map t = Map<String, dynamic>.from(todos[index] as Map);
     t["isDone"] = done;
+
+    if (done) {
+      t["doneAt"] = DateTime.now().millisecondsSinceEpoch;
+    } else {
+      t["doneAt"] = null;
+    }
+
     todos[index] = t;
 
     await writeAllTodos(todos);
