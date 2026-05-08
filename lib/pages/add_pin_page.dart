@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:taco/l10n/app_localizations.dart';
+import 'package:taco/services/share_service.dart';
 
 
 class AddPinPage extends StatefulWidget {
@@ -43,46 +42,17 @@ class _AddPinPage extends State<AddPinPage> {
 
     setState(() => loading = true);
     try {
-      final resp = await http.get(
-        Uri.parse("https://taco-share-561562660997.australia-southeast1.run.app/api/share/$pin"),
-      ).timeout(const Duration(seconds: 5));
-
-      if (resp.statusCode != 200) {
-        setState(() {
-          pin = "";
-          error = true;
-        });
-        HapticFeedback.mediumImpact();
-        await Future.delayed(
-          Duration(milliseconds: 80),
-        );
-        HapticFeedback.mediumImpact();
-        return;
-      }
-
-      final data = jsonDecode(resp.body);
-      if (data["done"] != true) {
-        setState(() {
-          pin = "";
-          error = true;
-        });
-        HapticFeedback.mediumImpact();
-        await Future.delayed(
-          Duration(milliseconds: 80),
-        );
-        HapticFeedback.mediumImpact();
-        return;
-      }
+      final data = await ShareService.getSharedTodo(pin);
 
       if (!mounted) return;
 
       setState(() {
         success = true;
       });
+
       HapticFeedback.mediumImpact();
-      await Future.delayed(
-        Duration(milliseconds: 500),
-      );
+      await Future.delayed(Duration(milliseconds: 500));
+
       Navigator.pop(context, {
         "content": data["content"] ?? "",
         "remark": data["remark"] ?? "",
@@ -90,10 +60,9 @@ class _AddPinPage extends State<AddPinPage> {
       });
     } catch (_) {
       HapticFeedback.mediumImpact();
-      await Future.delayed(
-        Duration(milliseconds: 80),
-      );
+      await Future.delayed(Duration(milliseconds: 80));
       HapticFeedback.mediumImpact();
+
       setState(() {
         pin = "";
         error = true;

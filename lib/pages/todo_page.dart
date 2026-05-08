@@ -6,7 +6,6 @@ import 'package:taco/l10n/app_localizations.dart';
 import 'package:taco/main.dart';
 import 'package:taco/services/todo_storage.dart';
 
-
 class TodoPage extends StatefulWidget {
   const TodoPage({super.key});
 
@@ -27,7 +26,6 @@ class _TodoPage extends State<TodoPage> {
     setState(() {});
   }
 
-
   // To do card
   Widget todoCard(String content, int index, {bool disableLongPress = false}) {
     final bool isSelected = selectedIndex.contains(index);
@@ -45,11 +43,11 @@ class _TodoPage extends State<TodoPage> {
             onLongPress: disableLongPress
                 ? null
                 : () {
-              setState(() {
-                selectMode = true;
-                selectedIndex.add(index);
-              });
-            },
+                    setState(() {
+                      selectMode = true;
+                      selectedIndex.add(index);
+                    });
+                  },
 
             onTap: () async {
               if (selectMode) {
@@ -113,7 +111,7 @@ class _TodoPage extends State<TodoPage> {
                         await _setDone(index, false); // done → to do
                         HapticFeedback.mediumImpact();
                       } else {
-                        await _setDone(index, true);  // to do → done
+                        await _setDone(index, true); // to do → done
                         HapticFeedback.mediumImpact();
                       }
 
@@ -130,11 +128,13 @@ class _TodoPage extends State<TodoPage> {
                       child: Icon(
                         showDone
                             ? (isPending
-                            ? Icons.check_box_outline_blank   // done → reset
-                            : Icons.check_box)   // done
+                                  ? Icons
+                                        .check_box_outline_blank // done → reset
+                                  : Icons.check_box) // done
                             : (isPending
-                            ? Icons.check_box    // to do → to be done
-                            : Icons.check_box_outline_blank),
+                                  ? Icons
+                                        .check_box // to do → to be done
+                                  : Icons.check_box_outline_blank),
                         color: isPending
                             ? const Color.fromARGB(255, 40, 110, 240)
                             : Colors.grey,
@@ -162,7 +162,6 @@ class _TodoPage extends State<TodoPage> {
     );
   }
 
-
   List<int> _filteredIndex(List todos) {
     final result = <int>[];
     for (int i = 0; i < todos.length; i++) {
@@ -173,7 +172,6 @@ class _TodoPage extends State<TodoPage> {
     }
     return result;
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -205,7 +203,6 @@ class _TodoPage extends State<TodoPage> {
           }
 
           SystemNavigator.pop();
-
         },
         child: Stack(
           children: [
@@ -218,7 +215,7 @@ class _TodoPage extends State<TodoPage> {
                     future: TodoStorage.readTodoList(),
                     builder: (context, tempTop) {
                       final List topTodos =
-                      (tempTop.data?["todos"] ?? []) as List;
+                          (tempTop.data?["todos"] ?? []) as List;
 
                       final filteredIndex = _filteredIndex(topTodos);
 
@@ -228,7 +225,7 @@ class _TodoPage extends State<TodoPage> {
 
                       final bool allSelected =
                           filteredIndex.isNotEmpty &&
-                              selectedInView == filteredIndex.length;
+                          selectedInView == filteredIndex.length;
 
                       final count = selectedIndex.length;
                       final title = selectMode
@@ -279,67 +276,84 @@ class _TodoPage extends State<TodoPage> {
                                   onPressed: selectedIndex.isEmpty
                                       ? null
                                       : () async {
-                                    final data = await TodoStorage.readTodoList();
-                                    final List todos = List.from(
-                                      data["todos"],
-                                    );
+                                          final data =
+                                              await TodoStorage.readTodoList();
+                                          final List todos = List.from(
+                                            data["todos"],
+                                          );
 
-                                    //back up deleted cards
-                                    final removedItems =
-                                    <Map<String, dynamic>>[];
-                                    final removedIndexes =
-                                    selectedIndex.toList()
-                                      ..sort((a, b) => b.compareTo(a));
+                                          //back up deleted cards
+                                          final removedItems =
+                                              <Map<String, dynamic>>[];
+                                          final removedIndexes =
+                                              selectedIndex.toList()..sort(
+                                                (a, b) => b.compareTo(a),
+                                              );
 
-                                    for (final i in removedIndexes) {
-                                      removedItems.add(todos[i]);
-                                      todos.removeAt(i);
-                                    }
+                                          for (final i in removedIndexes) {
+                                            removedItems.add(todos[i]);
+                                            todos.removeAt(i);
+                                          }
 
-                                    // add back to list
-                                    await TodoStorage.writeAllTodos(todos);
+                                          // add back to list
+                                          await TodoStorage.writeAllTodos(
+                                            todos,
+                                          );
 
-                                    setState(() {
-                                      selectedIndex.clear();
-                                      selectMode = false;
-                                    });
+                                          setState(() {
+                                            selectedIndex.clear();
+                                            selectMode = false;
+                                          });
 
-                                    HapticFeedback.mediumImpact();
-                                    await Future.delayed(const Duration(milliseconds: 80));
-                                    HapticFeedback.mediumImpact();
+                                          HapticFeedback.mediumImpact();
+                                          await Future.delayed(
+                                            const Duration(milliseconds: 80),
+                                          );
+                                          HapticFeedback.mediumImpact();
 
-                                    // undo
-                                    ScaffoldMessenger.of(
-                                      context,
-                                    ).showSnackBar(
-                                      SnackBar(
-                                        duration: const Duration(seconds: 2),
-                                        content: Row(
-                                          children: [
-                                            Text(
-                                              t.deletedCount("${removedItems.length}"),
-                                            ),
-                                            Spacer(),
-                                            GestureDetector(
-                                              onTap: () async {
-                                                todos.addAll(removedItems);
-                                                await TodoStorage.writeAllTodos(todos);
-                                                setState(() {});
-                                                ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                                              },
-                                              child: Text(
-                                                t.undo,
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
+                                          // undo
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              duration: const Duration(
+                                                seconds: 2,
+                                              ),
+                                              content: Row(
+                                                children: [
+                                                  Text(
+                                                    t.deletedCount(
+                                                      "${removedItems.length}",
+                                                    ),
+                                                  ),
+                                                  Spacer(),
+                                                  GestureDetector(
+                                                    onTap: () async {
+                                                      todos.addAll(
+                                                        removedItems,
+                                                      );
+                                                      await TodoStorage.writeAllTodos(
+                                                        todos,
+                                                      );
+                                                      setState(() {});
+                                                      ScaffoldMessenger.of(
+                                                        context,
+                                                      ).hideCurrentSnackBar();
+                                                    },
+                                                    child: Text(
+                                                      t.undo,
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  },
+                                          );
+                                        },
                                   padding: const EdgeInsets.all(12),
                                 ),
                               ),
@@ -387,21 +401,36 @@ class _TodoPage extends State<TodoPage> {
                                   icon: const Icon(Icons.more_vert),
                                   padding: const EdgeInsets.all(12),
                                   onSelected: (value) {
-                                    if (value == 'zh') Taco.of(context).setLocale(const Locale('zh'));
-                                    if (value == 'en') Taco.of(context).setLocale(const Locale('en'));
-                                    if (value == 'system') Taco.of(context).setLocale(null);
+                                    if (value == 'zh')
+                                      Taco.of(
+                                        context,
+                                      ).setLocale(const Locale('zh'));
+                                    if (value == 'en')
+                                      Taco.of(
+                                        context,
+                                      ).setLocale(const Locale('en'));
+                                    if (value == 'system')
+                                      Taco.of(context).setLocale(null);
                                   },
                                   itemBuilder: (context) => const [
-                                    PopupMenuItem(value: 'zh', child: Text('中文')),
-                                    PopupMenuItem(value: 'en', child: Text('English')),
+                                    PopupMenuItem(
+                                      value: 'zh',
+                                      child: Text('中文'),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'en',
+                                      child: Text('English'),
+                                    ),
                                     PopupMenuDivider(),
-                                    PopupMenuItem(value: 'system', child: Text('Follow system')),
+                                    PopupMenuItem(
+                                      value: 'system',
+                                      child: Text('Follow system'),
+                                    ),
                                   ],
                                   tooltip: "Language",
                                   color: Colors.white,
                                 ),
                               ),
-
                             ],
                           ],
                         ),
@@ -427,7 +456,11 @@ class _TodoPage extends State<TodoPage> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.done, size: 72, color: Colors.grey),
+                              const Icon(
+                                Icons.done,
+                                size: 72,
+                                color: Colors.grey,
+                              ),
                               const SizedBox(height: 12),
                               Text(
                                 showDone ? t.emptyDone : t.emptyTodo,
@@ -493,7 +526,9 @@ class _TodoPage extends State<TodoPage> {
 
                               for (int i = 0; i < todos.length; i++) {
                                 final t = todos[i];
-                                if (selectedIndex.any((oldIndex) => todosTmp[oldIndex] == t)) {
+                                if (selectedIndex.any(
+                                  (oldIndex) => todosTmp[oldIndex] == t,
+                                )) {
                                   newSelected.add(i);
                                 }
                               }
@@ -521,12 +556,11 @@ class _TodoPage extends State<TodoPage> {
                             key: ObjectKey(t),
                             child: selectMode
                                 ? ReorderableDelayedDragStartListener(
-                              index: i,
-                              child: card,
-                            )
+                                    index: i,
+                                    child: card,
+                                  )
                                 : card,
                           );
-
                         },
                       );
                     },
@@ -556,7 +590,11 @@ class _TodoPage extends State<TodoPage> {
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(12),
-                      child: const Icon(Icons.add, color: Colors.white, size: 36),
+                      child: const Icon(
+                        Icons.add,
+                        color: Colors.white,
+                        size: 36,
+                      ),
                     ),
                   ),
                 ),

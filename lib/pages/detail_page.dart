@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:io';
-import 'dart:convert';
-import 'package:path_provider/path_provider.dart';
-import 'package:http/http.dart' as http;
 import 'package:taco/pages/share_info_page.dart';
 import 'package:taco/l10n/app_localizations.dart';
+import 'package:taco/services/share_service.dart';
+import 'package:taco/services/todo_storage.dart';
 
 class DetailPage extends StatefulWidget {
   final int todoIndex;
@@ -71,25 +69,8 @@ class _DetailPage extends State<DetailPage> {
     return "${dateEN[d.weekday]} ${monthEN[d.month]} ${d.day} ${d.year}";
   }
 
-  Future<Map<String, dynamic>> readTodoList() async {
-    final dir = await getApplicationDocumentsDirectory();
-    final file = File("${dir.path}/todoList.json");
-
-    if (!await file.exists()) {
-      return {"todos": []};
-    }
-    final content = await file.readAsString();
-    return jsonDecode(content);
-  }
-
-  Future<void> writeAllTodos(List todos) async {
-    final dir = await getApplicationDocumentsDirectory();
-    final file = File("${dir.path}/todoList.json");
-    await file.writeAsString(jsonEncode({"todos": todos}));
-  }
-
   Future<void> _load() async {
-    final data = await readTodoList();
+    final data = await TodoStorage.readTodoList();
     final List todos = List.from(data["todos"] ?? []);
     final locale = Localizations.localeOf(context);
 
@@ -120,15 +101,7 @@ class _DetailPage extends State<DetailPage> {
   }
 
   Future<void> _markDone() async {
-    final data = await readTodoList();
-    final List todos = List.from(data["todos"] ?? []);
-
-    if (widget.todoIndex < 0 || widget.todoIndex >= todos.length) return;
-
-    final Map t = todos[widget.todoIndex] as Map;
-    t["isDone"] = true;
-
-    await writeAllTodos(todos);
+    await TodoStorage.setDone(widget.todoIndex, true);
 
     setState(() {
       isDone = true;
@@ -152,7 +125,7 @@ class _DetailPage extends State<DetailPage> {
       return;
     }
 
-    final data = await readTodoList();
+    final data = await TodoStorage.readTodoList();
     final List todos = List.from(data["todos"] ?? []);
     if (widget.todoIndex < 0 || widget.todoIndex >= todos.length) return;
 
@@ -161,7 +134,7 @@ class _DetailPage extends State<DetailPage> {
     t["remark"] = newRemark;
     t["ddl"] = _ddlEdit?.millisecondsSinceEpoch;
 
-    await writeAllTodos(todos);
+    await TodoStorage.writeAllTodos(todos);
 
     HapticFeedback.mediumImpact();
     FocusScope.of(context).unfocus();
@@ -174,29 +147,12 @@ class _DetailPage extends State<DetailPage> {
       sharing = true;
     });
 
-    Map<String, dynamic> shareData = {
-      "content": content,
-      "remark": remark,
-      "ddl": ddlTs,
-    };
-
     try {
-      final uri = Uri.parse("https://taco-share-561562660997.australia-southeast1.run.app/api/share");
-
-      final response = await http
-          .post(
-            uri,
-            headers: {"Content-Type": "application/json"},
-            body: jsonEncode(shareData),
-          )
-          .timeout(const Duration(seconds: 5));
-
-      if (response.statusCode != 200) {
-        throw Exception("server error ${response.statusCode}");
-      }
-
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      final String pin = data["pin"];
+      final pin = await ShareService.shareTodo(
+        content: content,
+        remark: remark,
+        ddl: ddlTs,
+      );
 
       if (!mounted) return;
 
